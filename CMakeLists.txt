@@ -13,4 +13,5 @@ endif()
 
 # Add main projects
 add_subdirectory(BasicUT)
+add_subdirectory(Benchmark)
 add_subdirectory(EnvironmentTest)

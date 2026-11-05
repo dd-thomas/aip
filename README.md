@@ -13,6 +13,7 @@
 | 3 | **Benchmark** -- измерение производительности | [benchmark.md](Benchmark/manual/benchmark.md) | то же, что для EnvironmentTest |
 | 4 | **SDK** -- подключение сторонних библиотек (Boost) | [sdk.md](SDK/manual/sdk.md) | + переменная окружения **WORKSDK**, распакованный Boost 1.80.0 |
 | 5 | **BoostUT** -- модульное тестирование с Boost.Test | [boost_ut.md](BoostUT/manual/boost_ut.md) | + Boost.Test, собранный через b2 (см. SDK) |
+| 6 | **Serialization** -- сериализация данных с Boost.Serialization | [serialization.md](Serialization/manual/serialization.md) | + Boost.Serialization, собранный через b2 (см. SDK) |
 
 ## Структура репозитория
 
@@ -25,6 +26,7 @@ aip
     Benchmark
     SDK
     BoostUT
+    Serialization
 ```
 
 ## Сборка проекта

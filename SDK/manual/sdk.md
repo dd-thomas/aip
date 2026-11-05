@@ -106,8 +106,8 @@ Boost -- это не одна библиотека, а набор из ~150 би
 
 ```
 cd /d %WORKSDK%\boost_1_80_0
-bootstrap.bat
-b2 stage --with-program_options --with-filesystem --with-test address-model=64 link=static runtime-link=shared threading=multi variant=debug,release -j8
+.\bootstrap.bat
+.\b2 stage --with-program_options --with-filesystem --with-test address-model=64 link=static runtime-link=shared threading=multi variant=debug,release -j8
 ```
 
 ### Linux

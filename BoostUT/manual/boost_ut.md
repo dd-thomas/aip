@@ -45,16 +45,25 @@ aip
             TimeUtils.cpp       <- реализация тестируемого модуля
         tests
             testTimeUtils.cpp   <- тесты
-        CMakeLists.txt
-    CMakeLists.txt
+        CMakeLists.txt          <- самостоятельный CMake-проект
+    ...
 ```
 
-Проект подключен к корневому **CMakeLists.txt**, там же подключен модуль CTest:
+Проект самостоятельный: конфигурируется и собирается отдельно от остальных лабораторных работ. Ему нужны переменная окружения **WORKSDK** и Boost с собранной библиотекой Boost.Test (см. [SDK](../../SDK/manual/sdk.md)). В начале **BoostUT/CMakeLists.txt** задаются заголовок проекта, стандарт C++17, подключается модуль CTest и проверяется **WORKSDK**:
 
 ```cmake
+cmake_minimum_required(VERSION 3.10)
+
+project(BoostUT)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(CTest)
-...
-add_subdirectory(BoostUT)
+
+if(NOT DEFINED ENV{WORKSDK})
+    message(FATAL_ERROR "Environment variable WORKSDK is not set.")
+endif()
 ```
 
 ### Тестируемый модуль
@@ -89,7 +98,7 @@ boost::posix_time::ptime MillisecondsToPtime(uint64_t milliseconds) noexcept
 
 Полную версию скрипта можно посмотреть в файле [CMakeLists.txt](../CMakeLists.txt).
 
-**1. Поиск Boost.** Так же, как в проекте SDK, Boost ищется в каталоге **WORKSDK** через **find_package** в режиме **CONFIG**. Компонент **unit_test_framework** -- это компилируемая библиотека Boost.Test, поэтому режима header-only здесь нет. Если Boost.Test не собран, проект пропускается с предупреждением, чтобы не ломать конфигурацию остальных проектов репозитория:
+**1. Поиск Boost.** Так же, как в проекте SDK, Boost ищется в каталоге **WORKSDK** через **find_package** в режиме **CONFIG**. Компонент **unit_test_framework** -- это компилируемая библиотека Boost.Test, поэтому режима header-only здесь нет. Если Boost.Test не собран, конфигурация завершается ошибкой с подсказкой:
 
 ```cmake
 set(BOOST_COMPONENTS
@@ -107,8 +116,7 @@ find_package(Boost ${BOOST_VERSION} EXACT CONFIG QUIET
 )
 
 if(NOT Boost_FOUND)
-    message(WARNING "BoostUT skipped: ...")
-    return()
+    message(FATAL_ERROR "Boost 1.80.0 with components (unit_test_framework) not found in ...")
 endif()
 ```
 
@@ -389,16 +397,21 @@ BOOST_AUTO_TEST_CASE(TestLargeFile, *utf::label("slow") * utf::timeout(5) * utf:
 
 ## Конфигурация, сборка и запуск
 
-1. Открыть в vscode **корневую** папку репозитория (aip).
+1. Открыть в vscode папку проекта **BoostUT** (aip/BoostUT), а не корень репозитория.
 2. Выполнить конфигурацию с помощью CMake. В выводе должна быть строка:
 
 ```
 [cmake] -- BoostUT: Boost 1.80.0 found: D:/Sdk/worksdk/boost_1_80_0/stage/lib/cmake/Boost-1.80.0
 ```
 
-Если вместо нее выводится предупреждение `BoostUT skipped: ...`, библиотека Boost.Test не собрана (см. [SDK](../../SDK/manual/sdk.md#сборка-компилируемых-библиотек-b2)).
+Если вместо нее выводится ошибка `Boost 1.80.0 with components (unit_test_framework) not found ...`, библиотека Boost.Test не собрана (см. [SDK](../../SDK/manual/sdk.md#сборка-компилируемых-библиотек-b2)).
 
-3. Выполнить сборку цели **BoostUTRunner**.
+3. Выполнить сборку цели **BoostUTRunner**. Сборка из терминала (из папки BoostUT):
+
+```
+cmake -S . -B build
+cmake --build build --config Debug
+```
 
 После конфигурации тесты станут доступны в панели Testing:
 
@@ -406,7 +419,7 @@ BOOST_AUTO_TEST_CASE(TestLargeFile, *utf::label("slow") * utf::timeout(5) * utf:
 
 ### Запуск через CTest
 
-Из каталога **build**:
+Из каталога **BoostUT/build**:
 
 ```
 ctest -C Debug --output-on-failure
@@ -415,9 +428,9 @@ ctest -C Debug --output-on-failure
 Запуск только тестов BoostUT с подробным выводом:
 
 ```
-PS D:\Work\aip\build> ctest -V -R BoostUTTests -C Debug
+PS D:\Work\aip\BoostUT\build> ctest -V -R BoostUTTests -C Debug
 ...
-1: Test command: D:\Work\aip\build\BoostUT\Debug\BoostUTRunner.exe
+1: Test command: D:\Work\aip\BoostUT\build\Debug\BoostUTRunner.exe
 1: Running 15 test cases...
 1:
 1: *** No errors detected
@@ -449,14 +462,14 @@ PS D:\Work\aip\build> ctest -V -R BoostUTTests -C Debug
 Пример:
 
 ```
-PS D:\Work\aip\build\BoostUT\Debug> .\BoostUTRunner.exe --run_test=TimeUtilsTestSuite/TestPtimeToMillisecondsEpoch
+PS D:\Work\aip\BoostUT\build\Debug> .\BoostUTRunner.exe --run_test=TimeUtilsTestSuite/TestPtimeToMillisecondsEpoch
 Running 1 test case...
 
 *** No errors detected
 ```
 
 ```
-PS D:\Work\aip\build\BoostUT\Debug> .\BoostUTRunner.exe --list_content
+PS D:\Work\aip\BoostUT\build\Debug> .\BoostUTRunner.exe --list_content
 TimeUtilsTestSuite*
     TestPtimeToMillisecondsEpoch*: Test conversion of epoch time to milliseconds
     SpecialValueTest*: Test special values
@@ -480,7 +493,8 @@ add_test(NAME BoostUTTests COMMAND BoostUTRunner --log_level=test_suite --report
 
 | Сообщение | Причина и решение |
 |---|---|
-| `BoostUT skipped: Boost 1.80.0 with components (unit_test_framework) not found` | Boost.Test не собран через b2 (`--with-test`), или Boost распакован не в WORKSDK. |
+| `Environment variable WORKSDK is not set.` | Не задана переменная WORKSDK или vscode не перезапущен после ее установки (см. [SDK](../../SDK/manual/sdk.md#sdk-и-переменная-окружения-worksdk)). |
+| `Boost 1.80.0 with components (unit_test_framework) not found` | Boost.Test не собран через b2 (`--with-test`), или Boost распакован не в WORKSDK. |
 | `LNK2038: mismatch detected for 'RuntimeLibrary'` / `'_ITERATOR_DEBUG_LEVEL'` | Debug-раннер линкуется с release-версией Boost.Test. Пересоберите Boost с `variant=debug,release`. При конфигурации CMake выводит предупреждение `debug variant of Boost.Test not found`. |
 | `LNK2005: main already defined` / `LNK2019: unresolved external symbol main` | **BOOST_TEST_MODULE** определен в нескольких .cpp-файлах раннера или не определен ни в одном. Макрос должен быть ровно в одном файле. |
 | `LNK2019: unresolved external symbol ... boost::unit_test::...` | Раннер не связан с **Boost::unit_test_framework** через **target_link_libraries**. |

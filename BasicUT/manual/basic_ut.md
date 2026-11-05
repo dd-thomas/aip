@@ -6,35 +6,7 @@
 
 ## Подготовка
 
-### Переменная окружения WORKSDK
-
-Корневой CMakeLists.txt проверяет наличие переменной окружения **WORKSDK**. Если она не задана, конфигурация завершится ошибкой:
-
-```
-CMake Error at CMakeLists.txt:11 (message):
-  Environment variable WORKSDK is not set.
-```
-
-#### Windows
-
-1. В терминале выполнить команду (значение -- путь к рабочей папке, например к папке с репозиторием):
-
-```
-setx WORKSDK "D:\Work\aip"
-```
-
-2. Перезапустить vscode, чтобы переменная стала видна CMake.
-
-#### Linux
-
-1. Добавить переменную в файл **~/.bashrc**:
-
-```
-echo 'export WORKSDK=$HOME/work/aip' >> ~/.bashrc
-source ~/.bashrc
-```
-
-2. Перезапустить vscode.
+Проект **BasicUT** самостоятельный: он конфигурируется и собирается отдельно от остальных лабораторных работ и не требует сторонних библиотек (Boost и т.п.) и переменной окружения **WORKSDK**.
 
 ### Получение исходников
 
@@ -56,33 +28,8 @@ aip
             main.cpp
         tests
             testMain.cpp
-        CMakeLists.txt
-    EnvironmentTest
-        ...
-    CMakeLists.txt
-```
-
-### Корневой CMakeLists.txt
-
-Корневой файл объединяет все лабораторные работы в один проект и задает общие настройки (стандарт C++17):
-
-```
-cmake_minimum_required(VERSION 3.10)
-
-project(AIP VERSION "1.0")
-
-set(CMAKE_CXX_STANDARD 17)          # Стандарт языка C++17
-set(CMAKE_CXX_STANDARD_REQUIRED ON) # Стандарт обязателен
-
-include(CTest) # Подключение модуля тестирования CTest
-
-if(NOT DEFINED ENV{WORKSDK})
-    message(FATAL_ERROR "Environment variable WORKSDK is not set.")
-endif()
-
-# Подпроекты
-add_subdirectory(BasicUT)
-add_subdirectory(EnvironmentTest)
+        CMakeLists.txt      <- самостоятельный CMake-проект
+    ...
 ```
 
 ### Converter.h / Converter.cpp -- тестируемый модуль
@@ -207,10 +154,17 @@ int main()
 
 ### BasicUT/CMakeLists.txt
 
-Проект описывает две цели сборки: приложение и тестовый раннер. Обратите внимание, что **Converter.cpp** входит в обе цели.
+Проект самостоятельный: в начале файла задаются минимальная версия CMake, имя проекта, общие настройки (стандарт C++17) и подключается модуль CTest. Далее описываются две цели сборки: приложение и тестовый раннер. Обратите внимание, что **Converter.cpp** входит в обе цели.
 
 ```
+cmake_minimum_required(VERSION 3.10)
+
 project(BasicUT)
+
+set(CMAKE_CXX_STANDARD 17)          # Стандарт языка C++17
+set(CMAKE_CXX_STANDARD_REQUIRED ON) # Стандарт обязателен
+
+include(CTest) # Подключение модуля тестирования CTest (нужен для add_test)
 
 # Исходники приложения
 set(BasicUT_SRCS
@@ -236,7 +190,7 @@ add_executable(BasicUTRunner
 
 ## Конфигурация, сборка и запуск
 
-1. Открыть в vscode **корневую** папку репозитория (aip), а не папку BasicUT.
+1. Открыть в vscode папку проекта **BasicUT** (aip/BasicUT), а не корень репозитория.
 ![CMake](../../EnvironmentTest/manual/images/folder.png)
 2. Выполнить конфигурацию с помощью CMake.
 ![CMake](../../EnvironmentTest/manual/images/cmake_configure.png)
@@ -245,31 +199,38 @@ add_executable(BasicUTRunner
 ```
 [cmake] -- Configuring done
 [cmake] -- Generating done
-[cmake] -- Build files have been written to: .../aip/build
+[cmake] -- Build files have been written to: .../aip/BasicUT/build
 ```
 
-3. Выполнить сборку кнопкой **Build**. Будут собраны все цели, в том числе **BasicUT** и **BasicUTRunner**. Для сборки отдельной цели ее можно выбрать в панели CMake (Build target).
+3. Выполнить сборку кнопкой **Build**. Будут собраны обе цели: **BasicUT** и **BasicUTRunner**. Для сборки отдельной цели ее можно выбрать в панели CMake (Build target).
 ![CMake](../../EnvironmentTest/manual/images/cmake_build.png)
 
 Расположение исполняемых файлов:
 
 | ОС | Приложение | Тестовый раннер |
 |---|---|---|
-| Windows (Visual Studio) | build\BasicUT\Debug\BasicUT.exe | build\BasicUT\Debug\BasicUTRunner.exe |
-| Linux (Makefiles/Ninja) | build/BasicUT/BasicUT | build/BasicUT/BasicUTRunner |
+| Windows (Visual Studio) | build\Debug\BasicUT.exe | build\Debug\BasicUTRunner.exe |
+| Linux (Makefiles/Ninja) | build/BasicUT | build/BasicUTRunner |
+
+Сборка из терминала (из папки BasicUT):
+
+```
+cmake -S . -B build
+cmake --build build
+```
 
 ### Запуск приложения
 
 Windows:
 
 ```
-.\build\BasicUT\Debug\BasicUT.exe --in 1500 --ct 0
+.\build\Debug\BasicUT.exe --in 1500 --ct 0
 ```
 
 Linux:
 
 ```
-./build/BasicUT/BasicUT --in 1500 --ct 0
+./build/BasicUT --in 1500 --ct 0
 ```
 
 Ожидаемый вывод:
@@ -290,13 +251,13 @@ Conversion types: 0=MillimeterToMeter, 1=CentimeterToMeter, 2=DecimeterToMeter, 
 Windows:
 
 ```
-.\build\BasicUT\Debug\BasicUTRunner.exe
+.\build\Debug\BasicUTRunner.exe
 ```
 
 Linux:
 
 ```
-./build/BasicUT/BasicUTRunner
+./build/BasicUTRunner
 ```
 
 Ожидаемый вывод:
@@ -349,7 +310,7 @@ int TestMillimeterToMeter()
 add_test(NAME BasicUTRunner COMMAND BasicUTRunner)
 ```
 
-   и проверить запуск командой (из папки build):
+   и проверить запуск командой (из папки BasicUT/build):
 
 ```
 ctest -C Debug --output-on-failure

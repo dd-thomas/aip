@@ -9,9 +9,7 @@
 
 ## Подготовка
 
-### Переменная окружения WORKSDK
-
-Должна быть задана, как описано в мануале [Базовое модульное тестирование](../../BasicUT/manual/basic_ut.md#переменная-окружения-worksdk).
+Проект **Benchmark** самостоятельный: он конфигурируется и собирается отдельно от остальных лабораторных работ и не требует сторонних библиотек и переменной окружения **WORKSDK**.
 
 ### Получение исходников
 
@@ -24,8 +22,7 @@
 
 ```
 aip
-    BasicUT
-        ...
+    ...
     Benchmark
         manual
             benchmark.md
@@ -36,21 +33,8 @@ aip
             Timer.cpp
         tests
             testMain.cpp
-        CMakeLists.txt
-    EnvironmentTest
-        ...
-    CMakeLists.txt
-```
-
-### Корневой CMakeLists.txt
-
-Проект **Benchmark** подключен к общей сборке так же, как остальные лабораторные работы:
-
-```
-# Подпроекты
-add_subdirectory(BasicUT)
-add_subdirectory(Benchmark)
-add_subdirectory(EnvironmentTest)
+        CMakeLists.txt      <- самостоятельный CMake-проект
+    ...
 ```
 
 ### Timer.h / Timer.cpp -- таймер
@@ -155,10 +139,17 @@ int SortIntVector(size_t size, int minVal, int maxVal)
 
 ### Benchmark/CMakeLists.txt
 
-Проект описывает две цели сборки: приложение **Benchmark** и раннер **BenchmarkUTRunner**.
+Проект самостоятельный: в начале файла задаются минимальная версия CMake, имя проекта, стандарт C++17 и подключается модуль CTest. Далее описываются две цели сборки: приложение **Benchmark** и раннер **BenchmarkUTRunner**.
 
 ```
+cmake_minimum_required(VERSION 3.10)
+
 project(Benchmark)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(CTest)
 
 set(Benchmark_SRCS
     src/main.cpp
@@ -185,15 +176,15 @@ add_executable(BenchmarkUTRunner
 
 ## Конфигурация, сборка и запуск
 
-1. Открыть в vscode **корневую** папку репозитория (aip), а не папку Benchmark.
+1. Открыть в vscode папку проекта **Benchmark** (aip/Benchmark), а не корень репозитория.
 ![CMake](../../EnvironmentTest/manual/images/folder.png)
 2. Выполнить конфигурацию с помощью CMake.
 ![CMake](../../EnvironmentTest/manual/images/cmake_configure.png)
 3. Выбрать конфигурацию сборки **Release** (панель CMake -- Configure/Build variant, или строка состояния vscode). Это важно -- см. раздел [Debug или Release](#debug-или-release).
-4. Выполнить сборку кнопкой **Build**. Будут собраны все цели, в том числе **Benchmark** и **BenchmarkUTRunner**.
+4. Выполнить сборку кнопкой **Build**. Будут собраны обе цели: **Benchmark** и **BenchmarkUTRunner**.
 ![CMake](../../EnvironmentTest/manual/images/cmake_build.png)
 
-Сборка из терминала (из корня репозитория):
+Сборка из терминала (из папки Benchmark):
 
 ```
 cmake -S . -B build
@@ -211,21 +202,21 @@ cmake --build build --target BenchmarkUTRunner
 
 | ОС | Приложение | Раннер бенчмарков |
 |---|---|---|
-| Windows (Visual Studio) | build\Benchmark\Release\Benchmark.exe | build\Benchmark\Release\BenchmarkUTRunner.exe |
-| Linux (Makefiles/Ninja) | build/Benchmark/Benchmark | build/Benchmark/BenchmarkUTRunner |
+| Windows (Visual Studio) | build\Release\Benchmark.exe | build\Release\BenchmarkUTRunner.exe |
+| Linux (Makefiles/Ninja) | build/Benchmark | build/BenchmarkUTRunner |
 
 ### Запуск раннера
 
 Windows:
 
 ```
-.\build\Benchmark\Release\BenchmarkUTRunner.exe
+.\build\Release\BenchmarkUTRunner.exe
 ```
 
 Linux:
 
 ```
-./build/Benchmark/BenchmarkUTRunner
+./build/BenchmarkUTRunner
 ```
 
 Пример вывода (конкретные числа зависят от компьютера и меняются от запуска к запуску):
@@ -297,7 +288,7 @@ Results: 3 passed, 0 failed
 add_test(NAME BenchmarkUTRunner COMMAND BenchmarkUTRunner)
 ```
 
-   и проверить запуск командой (из папки build):
+   и проверить запуск командой (из папки Benchmark/build):
 
 ```
 ctest -C Release --output-on-failure

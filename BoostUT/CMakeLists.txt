@@ -1,4 +1,15 @@
+cmake_minimum_required(VERSION 3.10)
+
 project(BoostUT)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(CTest)
+
+if(NOT DEFINED ENV{WORKSDK})
+    message(FATAL_ERROR "Environment variable WORKSDK is not set.")
+endif()
 
 # ---------------------------------------------------------------------------
 # Boost
@@ -26,11 +37,9 @@ find_package(Boost ${BOOST_VERSION} EXACT CONFIG QUIET
 )
 
 if(NOT Boost_FOUND)
-    # Не прерываем конфигурацию всего репозитория: остальные проекты могут собираться без Boost.Test
-    message(WARNING
-        "BoostUT skipped: Boost ${BOOST_VERSION} with components (${BOOST_COMPONENTS}) not found in ${BOOST_ROOT}.\n"
+    message(FATAL_ERROR
+        "Boost ${BOOST_VERSION} with components (${BOOST_COMPONENTS}) not found in ${BOOST_ROOT}.\n"
         "Build Boost.Test with b2, see SDK/manual/sdk.md and BoostUT/manual/boost_ut.md")
-    return()
 endif()
 
 message(STATUS "BoostUT: Boost ${Boost_VERSION} found: ${Boost_DIR}")
